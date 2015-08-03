@@ -13,7 +13,7 @@ len: equ $-msg                      ; "$" means "here"
                                     ; len is a value, not an address
 num3entered:                        ;
     db '0'                          ;
-    times 24-$+num3entered db 0     ; total length is == 24 chars
+    times 99-$+num3entered db 0     ; total length is == 24 chars
 
 SECTION .text                ; code section
 global main                  ; make label available to linker
@@ -25,8 +25,46 @@ main:                        ; standard  gcc  entry point
     int 0x80                 ; interrupt 80 hex, call kernel
 
 ; get data from output (stdin)
-    mov ecx, [esp+4]            ; argc
-    mov edx, [esp+8]            ; argv
+%ifdef X84_64
+    ; x86_64, 64b
+    ;mov rcx, rdi        ; argc - check number of arguments on argv
+    mov r8, 8           ; offset to second arg - if not exist we have problem
+    arg64:
+        mov rdx, qword [rsi+r8]     ; argv
+        push rcx                    ; save registers that printf wastes
+        push rdx
+        push rsi
+        push r8
+        mov rdi, format     ; first parameter for printf
+        mov rsi, rdx        ; second parameter for printf
+        mov rax, 0          ; no floating point register used
+        call printf         ; call to printf
+        pop r8              ; restore registers
+        pop rsi
+        pop rdx
+        pop rcx
+        add r8, 8           ; point to next argument
+        dec rcx             ; count down
+    jnz arg64               ; if not done counting keep going
+
+%else
+    ; x386, 32b
+    mov ecx, [esp+4]        ; argc
+    mov edx, [esp+8]        ; argv
+    arg32:                  ;
+        push ecx            ; save registers that printf wastes
+        push edx            ;
+        push dword [edx]    ; the argument string to display
+        push format         ; the format string
+        call printf         ;
+        add esp, 8          ; remove the two parameters
+        pop edx             ; restore registers printf used
+        pop ecx             ;
+        add edx, 4          ; point to next argument
+        dec ecx             ; count down
+    jnz arg32               ; if not done counting keep going
+
+%endif
 
 ; convert from string to int
     mov edx, num3entered            ; our string
@@ -36,9 +74,9 @@ main:                        ; standard  gcc  entry point
             movzx ecx, byte [edx]   ; get a character
             inc edx                 ; ready for next one
             cmp ecx, '0'            ; valid?
-            jb .done                ;
-                cmp ecx, '9'        ;
-            ja .done                ;
+                jb .done            ;
+            cmp ecx, '9'            ;
+                ja .done            ;
             sub ecx, '0'            ; "convert" character to number
             imul eax, 10            ; multiply "result so far" by ten
             add eax, ecx            ; add in current digit
