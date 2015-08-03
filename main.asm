@@ -7,44 +7,66 @@
 ; output is:  Hello World
 ; print(sum([int('1000001021'[int(i)])for i in sys.argv[1]])) - python
 
+extern printf
+
 SECTION .data                       ; data section
-msg: db  "1000001021"               ; the string to print, 10=cr
+msg: db  1,0,0,0,0,0,1,0,2,1        ; the string to print, 10=cr
+;        0 1 2 3 4 5 6 7 8 9
 len: equ $-msg                      ; "$" means "here"
                                     ; len is a value, not an address
+format: db "%s\n",0
+variable: dw 0
+
 num3entered:                        ;
     db '0'                          ;
-    times 99-$+num3entered db 0     ; total length is == 24 chars
+    times 24-$+num3entered db 0     ; total length is == 24 chars
 
 SECTION .text                ; code section
+
 global main                  ; make label available to linker
 main:                        ; standard  gcc  entry point
-    mov edx,len              ; arg3, length of string to print
-    mov ecx,msg              ; arg2, pointer to string
-    mov ebx,1                ; arg1, where to write, screen
-    mov eax,4                ; write sysout command to int 80 hex
-    int 0x80                 ; interrupt 80 hex, call kernel
+    ;mov edx,len              ; arg3, length of string to print
+    ;mov ecx,msg              ; arg2, pointer to string
+    ;mov ebx,1                ; arg1, where to write, screen
+    ;mov eax,4                ; write sysout command to int 80 hex
+    ;int 0x80                 ; interrupt 80 hex, call kernel
+
+
+; read a byte from stdin
+mov eax, 3       ; 3 is recognized by the system as meaning "read"
+mov ebx, 0       ; read from standard input
+mov ecx, variable        ; address to pass to
+mov edx, 1       ; input length (one byte)
+int 0x80                 ; call the kernel
+
+; print a byte to stdout
+mov eax, 4           ; the system interprets 4 as "write"
+mov ebx, 1           ; standard output (print to terminal)
+mov ecx, variable    ; pointer to the value being passed
+mov edx, 1           ; length of output (in bytes)
+int 0x80             ; call the kernel
 
 ; get data from output (stdin)
-%ifdef X84_64
+%ifdef M86x64
     ; x86_64, 64b
-    ;mov rcx, rdi        ; argc - check number of arguments on argv
-    mov r8, 8           ; offset to second arg - if not exist we have problem
+    mov rcx, rdi        ; argc - check number of arguments on argv
+    mov r8, 0           ; offset to second arg - if not exist we have problem
     arg64:
         mov rdx, qword [rsi+r8]     ; argv
         push rcx                    ; save registers that printf wastes
-        push rdx
-        push rsi
-        push r8
+        push rdx            ;
+        push rsi            ;
+        push r8             ;
         mov rdi, format     ; first parameter for printf
         mov rsi, rdx        ; second parameter for printf
         mov rax, 0          ; no floating point register used
         call printf         ; call to printf
         pop r8              ; restore registers
-        pop rsi
-        pop rdx
-        pop rcx
+        pop rsi             ;
+        pop rdx             ;
+        pop rcx             ;
         add r8, 8           ; point to next argument
-        dec rcx             ; count down
+    dec rcx                 ; count down
     jnz arg64               ; if not done counting keep going
 
 %else

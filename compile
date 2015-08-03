@@ -1,5 +1,11 @@
 #!/bin/bash
 elf="elf"
-if [ "$( uname -m )" == "x86_64" ] ; then elf="${elf} -dX86_64" ; fi
+
+if [ "$( uname -m )" == "x86_64" ] ; then elf="${elf}64 -dM86x64" ; fi
+echo "elf:${elf}"
+
 nasm -f ${elf} -l main.lst main.asm
-gcc -o test main.o
+
+if [ -f "main.o" ] ; then
+	gcc -o test main.o
+fi
