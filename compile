@@ -1,8 +1,14 @@
 #!/bin/bash
-elf="elf"
-
-if [ "$( uname -m )" == "x86_64" ] ; then elf="${elf}64 -dM86x64" ; fi
-echo "elf:${elf}"
+_name="main"
+_elf=""
+_ld=""
+if [ "$( uname -m )" == "x86_64" ] ; then
+	_elf="elf64 -dM86x64"
+	_ld="elf_x86_64"
+else
+	_elf="elf32 -dMi386"
+	_ld="elf_"
+fif
 
 nasm -f ${elf} -l main.lst main.asm
 

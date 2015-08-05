@@ -1,0 +1,7 @@
+#!/bin/bash
+if [ -f "main32" ] ; then rm main32 ; fi
+nasm -f elf32 -l main32.lst main32.asm
+if [ -f "main32.o" ] ; then
+  ld -melf_i386 -o main32 main32.o
+  ls -las main32
+fi
