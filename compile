@@ -1,3 +1,9 @@
 #!/bin/bash
-nasm -f elf32 -l v3.lst v3.asm
-ld -melf_i386 -o v3 v3.o
+if [ $# -ne 0  ] ; then
+	( nasm -f elf32 -l v3.lst v3.asm && ld -melf_i386 -o v3 v3.o && ./v3 $1 )
+	echo -e "\nresult=$?\n"
+else
+	echo 'Run application witha argument, example:'
+	echo './compile 9812'
+fi
+
