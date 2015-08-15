@@ -8,22 +8,21 @@
 ; Application return result by error code... yes, i know - it is ugly ;)
 
 SECTION .data
-	num: db "7289",0
 	tab: db 1,0,0,0,0,0,1,0,2,1
 	;		0 1 2 3 4 5 6 7 8 9
 
 SECTION .text
 global _start
 _start:
+	
+	times 3 pop esi ; get: argc, argv[0], argv[1]
 
 	push ebp
 	mov ebp, esp
-	sub esp, 10
+	sub esp, 2
 
-	mov esi, num
-
-	mov dword [ebp - 4], 0x0000 ; used only 1 byte. it is a little problem
-	mov dword [ebp - 8], 0x0000 ; used only 1 byte
+	mov dword [ebp - 0], 0x0000 ; used only 1 byte. it is a little problem
+	mov dword [ebp - 1], 0x0000 ; used only 1 byte
 
 	dofor: ; # 01, for:begin
 		; # 01, for[rules]:begin
@@ -35,17 +34,17 @@ _start:
 		; # 01, for[rules]:end
 
 		sub al, 48 ; convert from ascii to integer
-		mov byte [ebp - 8],  al ; .ichar, tmp variable
+		mov byte [ebp - 1],  al ; .ichar, tmp variable
 
 		; ----
 		push esi
 		push eax
 
 		mov esi, tab
-		mov ebx, dword [ebp - 8]
+		mov ebx, dword [ebp - 1]
 		xor eax, eax
 		mov al, byte [esi+ebx*1]
-		add byte [ebp - 4], al
+		add byte [ebp - 0], al
 
 		pop eax
 		pop esi
@@ -54,7 +53,7 @@ _start:
 	jmp dofor ; # 01, for:end
 	endfor:
 
-	mov ebx, dword [ebp - 4]
+	mov ebx, dword [ebp - 0]
 	mov esp, ebp
 	pop ebp
 
